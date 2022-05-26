@@ -44,6 +44,23 @@ import { SolscanIcon } from '../../src/common/components/icons/Solscan';
 import { ExplorerIcon } from '../../src/common/components/icons/Explorer';
 import NFTImage from '../../src/common/components/elements/NFTImage';
 import NFTFile from '../../src/common/components/elements/NFTFile';
+import dynamic from 'next/dynamic';
+
+const SolanaDarkblockWidget: any = dynamic(() => import("@darkblock.io/sol-widget"), {ssr: false});
+
+const config = {
+  customCssClass: "",             // pass here a class name you plan to use
+  debug: false,                   // debug flag to console.log some variables
+  imgViewer: {                    // image viewer control parameters
+    showRotationControl: true,
+    autoHideControls: true,
+    controlsFadeDelay: true,
+  },
+}
+
+const cb = (param: any) => {
+  console.log('Widget Callback', param)
+}
 
 const Activities = ({
   listings,
@@ -151,7 +168,9 @@ export default function NftByAddress({
   listedPrice?: number;
   offerPrice?: number;
 }) {
-  const { publicKey } = useWallet();
+  
+  const walletAdapter = useWallet();
+  const publicKey = walletAdapter.publicKey;
   const router = useRouter();
 
   const [queryNft, { data, loading, called, refetch, error }] = useNftMarketplaceLazyQuery();
@@ -623,6 +642,17 @@ export default function NftByAddress({
                       </div>
                     )}
                   </div>
+                )}
+                
+                {nft?.attributes && nft.attributes.length > 0 && nft.attributes.find( attr => attr.traitType === "darkblock-id") && (
+                  <Accordion title="Includes Unlockable Content">
+                    <SolanaDarkblockWidget
+                      tokenId={nft?.mintAddress}
+                      walletAdapter={walletAdapter}
+                      cb={cb}
+                      config={config}
+                    />
+                  </Accordion>
                 )}
 
                 {nft?.attributes && nft.attributes.length > 0 && (
