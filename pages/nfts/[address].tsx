@@ -58,10 +58,6 @@ const config = {
   },
 }
 
-const cb = (param: any) => {
-  console.log('Widget Callback', param)
-}
-
 const Activities = ({
   listings,
 }: {
@@ -642,19 +638,18 @@ export default function NftByAddress({
                       </div>
                     )}
                   </div>
-                )}
-                
+                )}                
                 {nft?.attributes && nft.attributes.length > 0 && nft.attributes.find( attr => attr.traitType === "darkblock-id") && (
-                  <Accordion title="Includes Unlockable Content">
-                    <SolanaDarkblockWidget
-                      tokenId={nft?.mintAddress}
-                      walletAdapter={walletAdapter}
-                      cb={cb}
-                      config={config}
-                    />
-                  </Accordion>
+                  <div>
+                    <Accordion title="Includes Unlockable Content" icon={{src: "/images/footericon-blk.svg", alt: "Darkblock logo"}}>
+                      <SolanaDarkblockWidget
+                        tokenId={nft?.mintAddress}
+                        walletAdapter={walletAdapter}
+                        config={config}
+                      />
+                    </Accordion>
+                  </div>
                 )}
-
                 {nft?.attributes && nft.attributes.length > 0 && (
                   <div>
                     <Accordion title="Attributes" amount={nft.attributes.length}>

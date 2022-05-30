@@ -1,6 +1,6 @@
 import { ProfileContainer } from '@/common/components/elements/ProfileContainer';
 import { GetServerSideProps, NextPage } from 'next';
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 //@ts-ignore
 import FeatherIcon from 'feather-icons-react';
 import cx from 'classnames';
@@ -40,6 +40,10 @@ import classNames from 'classnames';
 
 type OwnedNFT = OwnedNfTsQuery['nfts'][0];
 
+interface CustomOwnedNFT extends OwnedNFT {
+  is_darkblocked: boolean; 
+}
+
 export const getServerSideProps: GetServerSideProps<WalletDependantPageProps> = async (context) =>
   getProfileServerSideProps(context);
 
@@ -71,7 +75,7 @@ export const NFTCard = ({
   refetch,
   loading = false,
   showName = true,
-  newTab = false,
+  newTab = false,  
 }: {
   nft: OwnedNFT;
   marketplace: { auctionHouse: AuctionHouse };
@@ -80,13 +84,14 @@ export const NFTCard = ({
   ) => Promise<ApolloQueryResult<None>>;
   loading: boolean;
   showName?: boolean;
-  newTab?: boolean;
+  newTab?: boolean;  
 }) => {
+  const nftx: CustomOwnedNFT|any = nft;
   const { publicKey } = useWallet();
   const [listNFTVisibility, setListNFTVisibility] = useState(false);
   const [updateListingVisibility, setUpdateListingVisibility] = useState(false);
   const [updateOfferVisibility, setUpdateOfferVisibility] = useState(false);
-
+  
   if (loading) return <LoadingNFTCard />;
 
   const creatorsCopy = [...nft.creators];
@@ -148,10 +153,18 @@ export const NFTCard = ({
             </div>
           </a>
         </Link>
-        <div>
+        <div>          
+          { nftx.is_darkblocked ? (
+            <div className="flex space-x-4 justify-start mb-4">
+              <img alt={"Darkblock logo"} src="/images/footericon-blk.svg" className="h-6"/>
+              <p className={"mb-0 first-letter:text-base truncate text-sm"}>Includes Unlockable Content</p>
+            </div>
+          ) : (
+            <></>
+          )}
           <div
             className={`flex h-full w-full items-end justify-between md:flex-col md:items-center md:justify-between xl:flex-row xl:items-end xl:justify-between`}
-          >
+          >            
             {hasDefaultListing && (
               <ul className={`mb-0 flex flex-col`}>
                 <li className={`mb-2 text-sm font-bold text-gray-300 md:text-base`}>Price</li>
@@ -227,7 +240,7 @@ export const NFTCard = ({
                 </Link>
               </div>
             )}
-          </div>
+          </div>        
         </div>
       </div>
       <Modal open={listNFTVisibility} setOpen={setListNFTVisibility} title={`List NFT for sale`}>
@@ -277,7 +290,7 @@ interface NFTGridProps {
   ) => Promise<ApolloQueryResult<None>>;
   onLoadMore: (inView: boolean, entry: IntersectionObserverEntry) => Promise<void>;
   hasMore: boolean;
-  loading?: boolean;
+  loading?: boolean;  
 }
 
 export const NFTGrid: FC<NFTGridProps> = ({
@@ -287,7 +300,7 @@ export const NFTGrid: FC<NFTGridProps> = ({
   refetch,
   onLoadMore,
   hasMore,
-  loading = false,
+  loading = false,  
 }) => {
   return (
     <>
@@ -308,14 +321,14 @@ export const NFTGrid: FC<NFTGridProps> = ({
             <LoadingNFTCard />
           </>
         ) : (
-          <>
+          <>          
             {nfts.map((nft) => (
               <NFTCard
                 key={nft.address}
                 nft={nft}
                 refetch={refetch}
                 loading={loading}
-                marketplace={marketplace}
+                marketplace={marketplace}                
               />
             ))}
           </>
@@ -336,6 +349,20 @@ export const NFTGrid: FC<NFTGridProps> = ({
 
 type ListedFilterState = 'all' | 'listed' | 'unlisted' | 'search';
 
+type DarkblockRes = {
+  name: string;
+  description: string;
+  creator_name: string;
+  creator_address: string;
+  owner_name: string;
+  contract: string;
+  token: string;
+  image: string;
+  platform: string;
+  animation_url: string;
+  is_darkblocked: boolean;
+}
+
 enum ListingFilters {
   ALL,
   LISTED,
@@ -349,6 +376,7 @@ const ProfileNFTs: NextPage<WalletDependantPageProps> = (props) => {
   const { publicKey: pk } = props;
   const [listedFilter, setListedFilter] = useState<ListingFilters>(ListingFilters.ALL);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [darkblocked, setDarkblocked] = useState([]);
   const [gridView, setGridView] = useState<'1x1' | '2x2' | '3x3'>('3x3');
   const [hasMore, setHasMore] = useState(true);
   const variables = {
@@ -364,8 +392,15 @@ const ProfileNFTs: NextPage<WalletDependantPageProps> = (props) => {
   const loading = ownedNFTs.loading;
   const fetchMore = ownedNFTs.fetchMore;
   const actualOwnedNFTs = ownedNFTs?.data?.nfts || [];
+  
+  const nfts = actualOwnedNFTs.map((item) => {  
+    const res: DarkblockRes | any = darkblocked.find( (db: DarkblockRes) => db.token === item.mintAddress);
+    if(res) {
+      return {...item, is_darkblocked: res?.is_darkblocked }
+    }    
+    return {...item, is_darkblocked: false }
+  }).filter((item) => item?.owner?.address === pk);
 
-  const nfts = actualOwnedNFTs.filter((item) => item?.owner?.address === pk);
   const marketplace = ownedNFTs?.data?.marketplace;
 
   const [query, setQuery] = useState('');
@@ -397,6 +432,23 @@ const ProfileNFTs: NextPage<WalletDependantPageProps> = (props) => {
       : listedFilter === ListingFilters.UNLISTED
       ? unlistedNfts
       : nftsToShow;
+
+  useEffect( () => {
+    const fetchDarkblockData = async (pk: string) => {
+      try {
+        const response = await fetch(`https://api.darkblock.io/v1/nfts/collected?platform=Solana&account=${pk}`);
+        if(!response.ok) {
+          console.error(response.statusText);
+          return;
+        }
+        const { data } = await response.json();
+        setDarkblocked(data);
+      } catch (error) {
+        console.error('Error: while running fetch to darkblock api.', error);
+      }
+    }
+    fetchDarkblockData(pk);
+  }, [pk]);
 
   const ListingFilter = ({
     filterToCheck,
@@ -547,7 +599,7 @@ const ProfileNFTs: NextPage<WalletDependantPageProps> = (props) => {
           gridView={gridView}
           refetch={refetch}
           loading={ownedNFTs.loading}
-          marketplace={marketplace as Marketplace}
+          marketplace={marketplace as Marketplace}          
         />
       </ProfileContainer>
     </ProfileDataProvider>

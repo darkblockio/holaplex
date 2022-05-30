@@ -2,15 +2,22 @@ import { Disclosure, Transition } from '@headlessui/react';
 import { ChevronRight } from '../icons/ChevronRight';
 import cx from 'classnames';
 
+
+interface icon {
+  src: string;
+  alt: string;
+}
+
 interface Props {
   title: string;
   children: React.ReactNode;
   allowHorizOverflow?: boolean;
   defaultOpen?: boolean;
   amount?: number;
+  icon?: icon;
 }
 
-function Accordion({ title, children, allowHorizOverflow, defaultOpen, amount, ...props }: Props) {
+function Accordion({ title, children, allowHorizOverflow, defaultOpen, amount, icon, ...props }: Props) {
   return (
     <Disclosure defaultOpen={defaultOpen} {...props}>
       {({ open }) => (
@@ -21,7 +28,12 @@ function Accordion({ title, children, allowHorizOverflow, defaultOpen, amount, .
             } border border-gray-800 p-6`}
           >
             <div className={`flex items-center gap-4`}>
-              <p className="m-0"> {title}</p>
+              <div className="flex space-x-4 justify-start">
+                { icon && (
+                  <img alt={icon.alt} src={icon.src} className="h-6"/>
+                )}
+                <p className={"mb-0"}>{title}</p>
+              </div>
               {amount && (
                 <div className={`flex h-6 w-6 items-center justify-center rounded-md bg-gray-800`}>
                   {amount}
