@@ -1,0 +1,45 @@
+.darkblock-css {
+  @apply bg-gray-800 font-sans text-white;
+
+  .DarkblockWidget-Header {
+    @apply bg-gray-800;
+
+    .DarkblockWidget-Header-Row {
+      .content {
+        display: none;
+      }
+
+      .inner-button {
+        @apply h-12 max-h-12 rounded-full border-transparent bg-white px-6 py-1 text-black;
+      }
+    }
+  }
+
+  .DarkblockWidget-Stack-Panel {
+    @apply bg-slate-900;
+
+    .row {
+      @apply hover:bg-slate-700;
+    }
+
+    .selected {
+      @apply bg-slate-700;
+    }
+
+    .fileRow:hover {
+      @apply bg-slate-700;
+    }
+  }
+
+  .DarkblockWidget-Footer {
+    @apply pt-5 text-xs text-gray-500;
+
+    svg {
+      @apply stroke-gray-500;
+    }
+
+    svg path {
+      @apply fill-gray-500;
+    }
+  }
+}

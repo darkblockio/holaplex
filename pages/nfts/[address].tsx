@@ -46,17 +46,20 @@ import NFTImage from '../../src/common/components/elements/NFTImage';
 import NFTFile from '../../src/common/components/elements/NFTFile';
 import dynamic from 'next/dynamic';
 
-const SolanaDarkblockWidget: any = dynamic(() => import("@darkblock.io/sol-widget"), {ssr: false});
+const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
+  ssr: false,
+});
 
 const config = {
-  customCssClass: "",             // pass here a class name you plan to use
-  debug: false,                   // debug flag to console.log some variables
-  imgViewer: {                    // image viewer control parameters
+  customCssClass: 'darkblock-css', // pass here a class name you plan to use
+  debug: false, // debug flag to console.log some variables
+  imgViewer: {
+    // image viewer control parameters
     showRotationControl: true,
     autoHideControls: true,
     controlsFadeDelay: true,
   },
-}
+};
 
 const Activities = ({
   listings,
@@ -164,7 +167,6 @@ export default function NftByAddress({
   listedPrice?: number;
   offerPrice?: number;
 }) {
-  
   const walletAdapter = useWallet();
   const publicKey = walletAdapter.publicKey;
   const router = useRouter();
@@ -638,18 +640,23 @@ export default function NftByAddress({
                       </div>
                     )}
                   </div>
-                )}                
-                {nft?.attributes && nft.attributes.length > 0 && nft.attributes.find( attr => attr.traitType === "darkblock-id") && (
-                  <div>
-                    <Accordion title="Includes Unlockable Content" icon={{src: "/images/footericon-blk.svg", alt: "Darkblock logo"}}>
-                      <SolanaDarkblockWidget
-                        tokenId={nft?.mintAddress}
-                        walletAdapter={walletAdapter}
-                        config={config}
-                      />
-                    </Accordion>
-                  </div>
                 )}
+                {nft?.attributes &&
+                  nft.attributes.length > 0 &&
+                  nft.attributes.find((attr) => attr.traitType === 'darkblock-id') && (
+                    <div>
+                      <Accordion
+                        title="Includes Unlockable Content"
+                        icon={{ src: '/images/footericon-blk.svg', alt: 'Darkblock logo' }}
+                      >
+                        <SolanaDarkblockWidget
+                          tokenId={nft?.mintAddress}
+                          walletAdapter={walletAdapter}
+                          config={config}
+                        />
+                      </Accordion>
+                    </div>
+                  )}
                 {nft?.attributes && nft.attributes.length > 0 && (
                   <div>
                     <Accordion title="Attributes" amount={nft.attributes.length}>

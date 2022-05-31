@@ -30,7 +30,7 @@
     "@bugsnag/js": "^7.14.1",
     "@bugsnag/plugin-react": "^7.14.0",
     "@cardinal/namespaces-components": "^3.0.0",
-    "@darkblock.io/sol-widget": "^0.0.2",
+    "@darkblock.io/sol-widget": "^0.0.3",
     "@dialectlabs/react": "^0.5.4",
     "@dialectlabs/react-ui": "^0.8.6",
     "@fontsource/material-icons": "^4.5.2",
