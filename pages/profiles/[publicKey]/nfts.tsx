@@ -35,8 +35,14 @@ import classNames from 'classnames';
 import NoProfileItems, { NoProfileVariant } from '@/components/NoProfileItems';
 import ProfileLayout from '../../../src/views/profiles/ProfileLayout';
 import GridSelector from '@/components/GridSelector';
+import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
+import { DarkblockBadge } from '@/components/DarkblockBadge';
 
 export type OwnedNFT = OwnedNfTsQuery['nfts'][0];
+
+interface CustomOwnedNFT extends OwnedNFT {
+  is_darkblocked: boolean;
+}
 
 export const getServerSideProps: GetServerSideProps<WalletDependantPageProps> = async (context) =>
   getProfileServerSideProps(context);
@@ -82,6 +88,7 @@ export const NFTCard = ({
   newTab?: boolean;
   showCollection?: boolean;
 }) => {
+  const nftx: CustomOwnedNFT|any = nft;
   const { publicKey } = useWallet();
   const [listNFTVisibility, setListNFTVisibility] = useState(false);
   const [updateListingVisibility, setUpdateListingVisibility] = useState(false);
@@ -119,11 +126,11 @@ export const NFTCard = ({
               <img
                 src={imgOpt(nft.image, 600)}
                 alt={nft.name}
-                className="aspect-square w-full rounded-lg object-cover"
+                className="object-cover w-full rounded-lg aspect-square"
               />
             </div>
 
-            <div className="flex items-center bg-gray-900 py-4">
+            <div className="flex items-center py-4 bg-gray-900">
               <p
                 className={classNames(
                   'w-max-fit m-0 mb-0 min-h-[28px] truncate text-lg font-bold',
@@ -158,16 +165,21 @@ export const NFTCard = ({
                 </div>
               </Link>
             ) : (
-              <Link href={`/profiles/${shownCreatorAddress}`}>
-                <a className="text-gray-300">
-                  <Avatar
-                    address={shownCreatorAddress || ''}
-                    showAddress={false}
-                    border={true}
-                    data={{ pfpUrl: shownCreatorPfpUrl, twitterHandle: shownCreatorHandle }}
-                  />
-                </a>
-              </Link>
+              <>
+                <Link href={`/profiles/${shownCreatorAddress}`}>
+                  <a className="text-gray-300">
+                    <Avatar
+                      address={shownCreatorAddress || ''}
+                      showAddress={false}
+                      border={true}
+                      data={{ pfpUrl: shownCreatorPfpUrl, twitterHandle: shownCreatorHandle }}
+                    />
+                  </a>
+                </Link>
+                { nftx.is_darkblocked && (
+                  <DarkblockBadge />
+                )}
+              </>
             )}
 
             {offers.length > 0 && (
@@ -378,6 +390,20 @@ export const NFTGrid: FC<NFTGridProps> = ({
 
 type ListedFilterState = 'all' | 'listed' | 'unlisted' | 'search';
 
+type DarkblockRes = {
+  name: string;
+  description: string;
+  creator_name: string;
+  creator_address: string;
+  owner_name: string;
+  contract: string;
+  token: string;
+  image: string;
+  platform: string;
+  animation_url: string;
+  is_darkblocked: boolean;
+}
+
 enum ListingFilters {
   ALL,
   LISTED,
@@ -406,8 +432,15 @@ function ProfileNFTs(props: WalletDependantPageProps) {
   const loading = ownedNFTs.loading;
   const fetchMore = ownedNFTs.fetchMore;
   const actualOwnedNFTs = ownedNFTs?.data?.nfts || [];
+  const {data} = useFetchDarkblocked(pk);
+  const nfts = actualOwnedNFTs.map((item) => {
+    const res: DarkblockRes | any = data?.find( (db: DarkblockRes) => db.token === item.mintAddress);
+    if(res) {
+      return {...item, is_darkblocked: res?.is_darkblocked }
+    }
+    return {...item, is_darkblocked: false }
+  }).filter((item) => item?.owner?.address === pk);
 
-  const nfts = actualOwnedNFTs.filter((item) => item?.owner?.address === pk);
   const marketplace = ownedNFTs?.data?.marketplace;
 
   const [query, setQuery] = useState('');
@@ -496,7 +529,7 @@ function ProfileNFTs(props: WalletDependantPageProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex flex-col items-center gap-6 bg-gray-900 bg-opacity-80 py-4 backdrop-blur-sm lg:flex-row lg:justify-between lg:gap-4">
+      <div className="sticky top-0 z-10 flex flex-col items-center gap-6 py-4 bg-gray-900 bg-opacity-80 backdrop-blur-sm lg:flex-row lg:justify-between lg:gap-4">
         <div className={`flex w-full justify-start gap-4 lg:items-center`}>
           <ListingFilter title={`All`} filterToCheck={ListingFilters.ALL} count={totalCount} />
           <ListingFilter
