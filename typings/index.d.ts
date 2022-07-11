@@ -10,3 +10,4 @@ interface Window {
 }
 
 declare module 'react-grid-carousel';
+declare module '@darkblock.io/sol-widget';
