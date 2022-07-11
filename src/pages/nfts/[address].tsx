@@ -44,15 +44,6 @@ import NFTFile from '@/components/NFTFile';
 import { ClipboardCheckIcon, ExclamationCircleIcon } from '@heroicons/react/outline';
 import { ButtonSkeleton } from '@/components/Skeletons';
 import { DollarSign, Tag as FeatherTag, Zap } from 'react-feather';
-import Popover from '../../components/Popover';
-import { LightningBoltIcon, TagIcon } from '@heroicons/react/outline';
-import { ProfileChip } from '@/components/ProfileChip';
-import { getAuctionHouseInfo } from '../../modules/utils/marketplace';
-
-// TODO: update sdk to include marketplaceProgramAddress
-export interface AhListingMultiMarketplace extends AhListing {
-  marketplaceProgramAddress?: string;
-}
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const nftAddress = context?.params?.address ?? '';
@@ -117,8 +108,9 @@ export default function NftByAddress({
   description?: string;
   image?: string;
 }) {
-  const { publicKey } = useWallet();
   const router = useRouter();
+  const walletAdapter = useWallet();
+  const publicKey = walletAdapter.publicKey;
 
   const [queryNft, { data, loading, called, refetch, error }] = useNftMarketplaceLazyQuery();
   const [queryNftActivity, activityContext] = useNftActivityLazyQuery();
@@ -169,9 +161,13 @@ export default function NftByAddress({
   const [sellModalVisibility, setSellModalVisibility] = useState(false);
   const [sellCancelModalVisibility, setSellCancelModalVisibility] = useState(false);
   const [sellUpdateModalVisibility, setSellUpdateModalVisibility] = useState(false);
+  const [darkblockModalVisibility, setDarkblockModalVisibility] = useState(false);
 
   const nft = data?.nft || data?.nftByMintAddress;
   const marketplace = data?.marketplace;
+
+  const owner = nft?.owner?.address;
+  const darkblock = useFetchDarkblocked(owner);
 
   // has listed via default Holaplex marketplace (disregards others)
   const defaultListing = nft?.listings.find(
@@ -290,7 +286,7 @@ export default function NftByAddress({
 
   return (
     <>
-      <div className="container mx-auto px-6 pb-20 md:px-12">
+      <div className="container px-6 pb-20 mx-auto md:px-12">
         <Head>
           <meta charSet={`utf-8`} />
           <title>{name} NFT | Holaplex</title>
@@ -316,12 +312,12 @@ export default function NftByAddress({
           <meta property="og:site_name" content="Holaplex" />
           <meta property="og:type" content="website" />
         </Head>
-        <div className=" text-white">
-          <div className="mt-12 mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-            <div className="mb-4 block lg:mb-0 lg:items-center lg:justify-center ">
-              <div className="mb-6 block lg:hidden">
+        <div className="text-white ">
+          <div className="grid items-start grid-cols-1 gap-6 mt-12 mb-10 lg:grid-cols-2">
+            <div className="block mb-4 lg:mb-0 lg:flex lg:items-center lg:justify-center ">
+              <div className="block mb-6 lg:hidden">
                 {loading ? (
-                  <div className="h-32 w-full rounded-lg bg-gray-800" />
+                  <div className="w-full h-32 bg-gray-800 rounded-lg" />
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
@@ -333,54 +329,12 @@ export default function NftByAddress({
                   </>
                 )}
               </div>
-              <div>
-                <NFTFile loading={loading} nft={nft as Nft | any} />
-                <div className="mt-10 flex flex-col justify-between sm:flex-row sm:flex-nowrap">
-                  <div className="flex flex-col">
-                    <div className="label mb-4 font-medium text-gray-300">
-                      {loading ? <div className="h-4 w-14 rounded bg-gray-800" /> : 'Created by'}
-                    </div>
-                    <ul className="mb-0 flex h-full items-center">
-                      {loading ? (
-                        <li>
-                          <div className="h-6 w-20 rounded bg-gray-800" />
-                        </li>
-                      ) : nft?.creators.length === 1 ? (
-                        <ProfileChip user={nft.creators[0]} />
-                      ) : (
-                        <div>{nft?.creators && <AvatarIcons profiles={nft.creators} />}</div>
-                      )}
-                    </ul>
-                  </div>
-                  {nft?.collection?.address && (
-                    <div
-                      className={clsx('mt-10 flex max-w-fit flex-col sm:mt-0', loading && 'hidden')}
-                    >
-                      <div className="label mb-4 font-medium text-gray-300 sm:self-end">
-                        Collection
-                      </div>
-
-                      <Link href={`/collections/${nft?.collection?.address}`}>
-                        <a className="flex items-center space-x-2 rounded-md py-3 pl-2 pr-4 shadow-2xl shadow-black">
-                          {nft?.collection?.image && (
-                            <img
-                              className="h-8 w-8 rounded-md object-cover"
-                              alt={nft.collection?.name}
-                              src={nft?.collection.image}
-                            />
-                          )}
-                          <span>{nft.collection.name}</span>
-                        </a>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <NFTFile loading={loading} nft={nft as Nft | any} />
             </div>
             <div>
-              <div className="mb-8 hidden lg:block">
+              <div className="hidden mb-8 lg:block">
                 {loading ? (
-                  <div className="h-32 w-full rounded-lg bg-gray-800" />
+                  <div className="w-full h-32 bg-gray-800 rounded-lg" />
                 ) : (
                   <>
                     <div className="flex justify-between">
@@ -392,9 +346,47 @@ export default function NftByAddress({
                   </>
                 )}
               </div>
-              <div className="mb-8 max-w-fit">
-                <div className="label mb-4 font-medium text-gray-300">
-                  {loading ? <div className="h-4 w-14 rounded bg-gray-800" /> : 'Owned by'}
+              <div className="flex flex-row justify-between flex-1 mb-8">
+                <div>
+                  <div className="mb-1 text-gray-300 label">
+                    {loading ? <div className="h-4 bg-gray-800 rounded w-14" /> : 'Created by'}
+                  </div>
+                  <ul>
+                    {loading ? (
+                      <li>
+                        <div className="w-20 h-6 bg-gray-800 rounded" />
+                      </li>
+                    ) : nft?.creators.length === 1 ? (
+                      <Link href={`/profiles/${nft?.creators[0].address}`}>
+                        <a>
+                          <Avatar address={nft?.creators[0].address} />
+                        </a>
+                      </Link>
+                    ) : (
+                      <div>
+                        <AvatarIcons profiles={nft?.creators || []} />
+                      </div>
+                    )}
+                  </ul>
+                </div>
+
+                <div
+                  className={cx('flex', {
+                    hidden: loading,
+                  })}
+                >
+                  <div className="flex flex-col items-end flex-1">
+                    <div className="self-end mb-1 text-gray-300 label">
+                      {hasDefaultListing ? `Listed by` : `Collected by`}
+                    </div>
+                    {nft?.owner?.address && (
+                      <Link href={`/profiles/${nft?.owner?.address}`}>
+                        <a>
+                          <Avatar address={nft?.owner?.address} />
+                        </a>
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 {nft?.owner && <ProfileChip user={nft?.owner} />}
               </div>
@@ -476,86 +468,8 @@ export default function NftByAddress({
                         </div>
                       </div>
                     )}
-                    {Boolean(otherListings) &&
-                      otherListings?.map((otherListing, i) => {
-                        const auctionHouseInfo = getAuctionHouseInfo(
-                          otherListing as AhListingMultiMarketplace
-                        );
-                        return (
-                          <div
-                            key={`listing-${otherListing?.auctionHouse?.address}-${i}`}
-                            className={`mt-6 border-t border-gray-700 pt-6`}
-                          >
-                            {auctionHouseInfo.name === 'Unknown Marketplace' ? (
-                              <div>
-                                <p
-                                  className={`flex items-center justify-center gap-2 text-center text-base font-medium text-gray-300`}
-                                >
-                                  <span>
-                                    <ExclamationCircleIcon className={`h-6 w-6`} />
-                                  </span>
-                                  This NFT is listed on an unknown AuctionHouse
-                                </p>
-                              </div>
-                            ) : (
-                              <>
-                                <p
-                                  className={`flex flex-row items-center gap-2 text-sm font-medium text-gray-300`}
-                                >
-                                  Listed on{' '}
-                                  <span className={`flex items-center gap-1 font-bold text-white`}>
-                                    <img
-                                      src={auctionHouseInfo?.logo}
-                                      alt={auctionHouseInfo.name}
-                                      className={`h-4 w-4 rounded-sm`}
-                                    />
-                                    {auctionHouseInfo?.name}
-                                  </span>
-                                </p>
-                                <div
-                                  className={
-                                    'flex flex-col items-start justify-start gap-2 sm:flex-row sm:items-center sm:justify-between'
-                                  }
-                                >
-                                  <div>
-                                    <h3 className={`text-base font-medium text-gray-300`}>Price</h3>
-                                    <DisplaySOL amount={otherListing?.price} />
-                                  </div>
-                                  <div className={`flex w-full items-center gap-2 sm:w-auto`}>
-                                    <Link href={`/nfts/${nft?.address}/offers/new`}>
-                                      <a className={`w-full`}>
-                                        <Button className={`w-full`} secondary>
-                                          Make offer
-                                        </Button>
-                                      </a>
-                                    </Link>
-                                    {auctionHouseInfo.link &&
-                                    otherListing?.auctionHouse === null ? (
-                                      <Link href={`${auctionHouseInfo?.link}${nft?.mintAddress}`}>
-                                        <a target={`_blank`}>
-                                          <Button>View listing</Button>
-                                        </a>
-                                      </Link>
-                                    ) : (
-                                      <BuyForm
-                                        loading={loading}
-                                        nft={nft as Nft | any}
-                                        marketplace={marketplace as Marketplace}
-                                        listing={otherListing as AhListingMultiMarketplace}
-                                        refetch={refetch}
-                                        className={`w-full`}
-                                      />
-                                    )}
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
                   </div>
                 )}
-
                 {hasDefaultListing && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
                     {isOwner && hasOffers && (
@@ -844,10 +758,10 @@ export default function NftByAddress({
                       <div className="grid grid-cols-2 gap-4">
                         {loading ? (
                           <div>
-                            <div className="h-16 rounded bg-gray-800" />
-                            <div className="h-16 rounded bg-gray-800" />
-                            <div className="h-16 rounded bg-gray-800" />
-                            <div className="h-16 rounded bg-gray-800" />
+                            <div className="h-16 bg-gray-800 rounded" />
+                            <div className="h-16 bg-gray-800 rounded" />
+                            <div className="h-16 bg-gray-800 rounded" />
+                            <div className="h-16 bg-gray-800 rounded" />
                           </div>
                         ) : (
                           nft?.attributes.map((a) => (
@@ -855,7 +769,7 @@ export default function NftByAddress({
                               key={a.traitType}
                               className="max-h-[300px] rounded border border-gray-800 p-4"
                             >
-                              <p className="label mb-1 truncate text-base font-medium text-gray-300">
+                              <p className="mb-1 text-base font-medium text-gray-300 truncate label">
                                 {a.traitType}
                               </p>
                               <p className="mb-0 truncate text-ellipsis">{a.value}</p>
@@ -916,7 +830,7 @@ export default function NftByAddress({
           </div>
           <div className={`my-10 flex flex-col justify-between text-sm sm:text-base md:text-lg`}>
             {loading ? (
-              <div className="h-32 w-full rounded-lg bg-gray-800" />
+              <div className="w-full h-32 bg-gray-800 rounded-lg" />
             ) : (
               <Accordion title={`Offers`} amount={offers.length} defaultOpen>
                 <section className={`w-full`}>
@@ -934,9 +848,9 @@ export default function NftByAddress({
                   )}
 
                   {!hasOffers && (
-                    <div className="w-full rounded-lg border border-gray-800 p-10 text-center">
+                    <div className="w-full p-10 text-center border border-gray-800 rounded-lg">
                       <h3>No offers found</h3>
-                      <p className="mt- text-gray-500">
+                      <p className="text-gray-500 mt-">
                         There are currently no offers on this NFT.
                       </p>
                     </div>
@@ -989,7 +903,7 @@ export default function NftByAddress({
           </div>
           <div className={`my-10 flex flex-col justify-between text-sm sm:text-base md:text-lg`}>
             {activityContext.loading ? (
-              <div className="h-32 w-full rounded-lg bg-gray-800" />
+              <div className="w-full h-32 bg-gray-800 rounded-lg" />
             ) : (
               <Accordion
                 title={`Activity`}
@@ -1008,23 +922,20 @@ export default function NftByAddress({
                     return (
                       <article
                         key={a.id}
-                        className="mb-4 grid grid-cols-4 rounded border border-gray-700 p-4"
+                        className="grid grid-cols-4 p-4 mb-4 border border-gray-700 rounded"
                       >
                         <div className="flex self-center">
                           {a.activityType === 'purchase' && (
-                            // <FeatherTag  size="18" />
-                            <TagIcon className="mr-2 h-4 w-4 self-center text-gray-300" />
+                            <FeatherTag className="self-center mr-2 text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'purchase' && 'Sold'}</div>
 
                           {a.activityType === 'offer' && (
-                            // <Zap className="mr-2 self-center text-gray-300" size="18" />
-                            <LightningBoltIcon className="mr-2 h-4 w-4 self-center text-gray-300" />
+                            <Zap className="self-center mr-2 text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'offer' && 'Offer Made'}</div>
                           {a.activityType === 'listing' && (
-                            // <FeatherTag className="mr-2 self-center text-gray-300" size="18" />
-                            <TagIcon className="mr-2 h-4 w-4 self-center text-gray-300" />
+                            <FeatherTag className="self-center mr-2 text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'listing' && 'Listed'}</div>
                         </div>
@@ -1036,7 +947,7 @@ export default function NftByAddress({
                           {multipleWallets && (
                             <img
                               src="/images/svgs/uturn.svg"
-                              className="mr-2 w-4 text-gray-300"
+                              className="w-4 mr-2 text-gray-300"
                               alt="wallets"
                             />
                           )}
@@ -1160,6 +1071,17 @@ export default function NftByAddress({
                 listing={defaultListing as AhListingMultiMarketplace}
                 setOpen={setSellUpdateModalVisibility}
                 offer={topOffer as Offer}
+              />
+            </Modal>
+            <Modal
+              open={darkblockModalVisibility}
+              setOpen={setDarkblockModalVisibility}
+              title={`Darkblock Unlockable Content`}
+            >
+              <SolanaDarkblockWidget
+                tokenId={nft?.mintAddress}
+                walletAdapter={walletAdapter}
+                config={config}
               />
             </Modal>
           </>
