@@ -45,6 +45,7 @@ import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
 import DarkblockAccordion from '@/components/DarkblockAccordion';
 import { DarkblockMint } from '@/components/DarkblockMint';
 
+// import SolanaDarkblockWidget from './sol'
 const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
   ssr: false,
 });
@@ -59,7 +60,6 @@ const config = {
     controlsFadeDelay: true,
   },
 };
-
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const nftAddress = context?.params?.address ?? '';
@@ -267,7 +267,7 @@ export default function NftByAddress({
 
   return (
     <>
-      <div className="container px-6 pb-20 mx-auto md:px-12">
+      <div className="container mx-auto px-6 pb-20 md:px-12">
         <Head>
           <meta charSet={`utf-8`} />
           <title>{name} NFT | Holaplex</title>
@@ -294,11 +294,11 @@ export default function NftByAddress({
           <meta property="og:type" content="website" />
         </Head>
         <div className="text-white ">
-          <div className="grid items-start grid-cols-1 gap-6 mt-12 mb-10 lg:grid-cols-2">
-            <div className="block mb-4 lg:mb-0 lg:flex lg:items-center lg:justify-center ">
-              <div className="block mb-6 lg:hidden">
+          <div className="mt-12 mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            <div className="mb-4 block lg:mb-0 lg:flex lg:items-center lg:justify-center ">
+              <div className="mb-6 block lg:hidden">
                 {loading ? (
-                  <div className="w-full h-32 bg-gray-800 rounded-lg" />
+                  <div className="h-32 w-full rounded-lg bg-gray-800" />
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
@@ -313,9 +313,9 @@ export default function NftByAddress({
               <NFTFile loading={loading} nft={nft as Nft | any} />
             </div>
             <div>
-              <div className="hidden mb-8 lg:block">
+              <div className="mb-8 hidden lg:block">
                 {loading ? (
-                  <div className="w-full h-32 bg-gray-800 rounded-lg" />
+                  <div className="h-32 w-full rounded-lg bg-gray-800" />
                 ) : (
                   <>
                     <div className="flex justify-between">
@@ -327,15 +327,15 @@ export default function NftByAddress({
                   </>
                 )}
               </div>
-              <div className="flex flex-row justify-between flex-1 mb-8">
+              <div className="mb-8 flex flex-1 flex-row justify-between">
                 <div>
-                  <div className="mb-1 text-gray-300 label">
-                    {loading ? <div className="h-4 bg-gray-800 rounded w-14" /> : 'Created by'}
+                  <div className="label mb-1 text-gray-300">
+                    {loading ? <div className="h-4 w-14 rounded bg-gray-800" /> : 'Created by'}
                   </div>
                   <ul>
                     {loading ? (
                       <li>
-                        <div className="w-20 h-6 bg-gray-800 rounded" />
+                        <div className="h-6 w-20 rounded bg-gray-800" />
                       </li>
                     ) : nft?.creators.length === 1 ? (
                       <Link href={`/profiles/${nft?.creators[0].address}`}>
@@ -356,8 +356,8 @@ export default function NftByAddress({
                     hidden: loading,
                   })}
                 >
-                  <div className="flex flex-col items-end flex-1">
-                    <div className="self-end mb-1 text-gray-300 label">
+                  <div className="flex flex-1 flex-col items-end">
+                    <div className="label mb-1 self-end text-gray-300">
                       {hasDefaultListing ? `Listed by` : `Collected by`}
                     </div>
                     {nft?.owner?.address && (
@@ -459,9 +459,14 @@ export default function NftByAddress({
                   </div>
                 )} */}
 
-                { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                {darkblock.data?.find((item: any) => item.token === nft?.mintAddress)
+                  .is_darkblocked && (
                   <div>
-                    <DarkblockAccordion title={`Unlockable Content`} amount={1} action={() => setDarkblockModalVisibility(true)}>
+                    <DarkblockAccordion
+                      title={`Unlockable Content`}
+                      amount={1}
+                      action={() => setDarkblockModalVisibility(true)}
+                    >
                       <SolanaDarkblockWidget
                         tokenId={nft?.mintAddress}
                         walletAdapter={walletAdapter}
@@ -469,8 +474,7 @@ export default function NftByAddress({
                       />
                     </DarkblockAccordion>
                   </div>
-                  )
-                }
+                )}
 
                 {hasDefaultListing && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
@@ -699,10 +703,10 @@ export default function NftByAddress({
                       <div className="grid grid-cols-2 gap-4">
                         {loading ? (
                           <div>
-                            <div className="h-16 bg-gray-800 rounded" />
-                            <div className="h-16 bg-gray-800 rounded" />
-                            <div className="h-16 bg-gray-800 rounded" />
-                            <div className="h-16 bg-gray-800 rounded" />
+                            <div className="h-16 rounded bg-gray-800" />
+                            <div className="h-16 rounded bg-gray-800" />
+                            <div className="h-16 rounded bg-gray-800" />
+                            <div className="h-16 rounded bg-gray-800" />
                           </div>
                         ) : (
                           nft?.attributes.map((a) => (
@@ -710,7 +714,7 @@ export default function NftByAddress({
                               key={a.traitType}
                               className="max-h-[300px] rounded border border-gray-800 p-4"
                             >
-                              <p className="mb-1 text-base font-medium text-gray-300 truncate label">
+                              <p className="label mb-1 truncate text-base font-medium text-gray-300">
                                 {a.traitType}
                               </p>
                               <p className="mb-0 truncate text-ellipsis">{a.value}</p>
@@ -771,7 +775,7 @@ export default function NftByAddress({
           </div>
           <div className={`my-10 flex flex-col justify-between text-sm sm:text-base md:text-lg`}>
             {loading ? (
-              <div className="w-full h-32 bg-gray-800 rounded-lg" />
+              <div className="h-32 w-full rounded-lg bg-gray-800" />
             ) : (
               <Accordion title={`Offers`} amount={offers.length} defaultOpen>
                 <section className={`w-full`}>
@@ -789,9 +793,9 @@ export default function NftByAddress({
                   )}
 
                   {!hasOffers && (
-                    <div className="w-full p-10 text-center border border-gray-800 rounded-lg">
+                    <div className="w-full rounded-lg border border-gray-800 p-10 text-center">
                       <h3>No offers found</h3>
-                      <p className="text-gray-500 mt-">
+                      <p className="mt- text-gray-500">
                         There are currently no offers on this NFT.
                       </p>
                     </div>
@@ -844,7 +848,7 @@ export default function NftByAddress({
           </div>
           <div className={`my-10 flex flex-col justify-between text-sm sm:text-base md:text-lg`}>
             {activityContext.loading ? (
-              <div className="w-full h-32 bg-gray-800 rounded-lg" />
+              <div className="h-32 w-full rounded-lg bg-gray-800" />
             ) : (
               <Accordion
                 title={`Activity`}
@@ -863,20 +867,20 @@ export default function NftByAddress({
                     return (
                       <article
                         key={a.id}
-                        className="grid grid-cols-4 p-4 mb-4 border border-gray-700 rounded"
+                        className="mb-4 grid grid-cols-4 rounded border border-gray-700 p-4"
                       >
                         <div className="flex self-center">
                           {a.activityType === 'purchase' && (
-                            <FeatherTag className="self-center mr-2 text-gray-300" size="18" />
+                            <FeatherTag className="mr-2 self-center text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'purchase' && 'Sold'}</div>
 
                           {a.activityType === 'offer' && (
-                            <Zap className="self-center mr-2 text-gray-300" size="18" />
+                            <Zap className="mr-2 self-center text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'offer' && 'Offer Made'}</div>
                           {a.activityType === 'listing' && (
-                            <FeatherTag className="self-center mr-2 text-gray-300" size="18" />
+                            <FeatherTag className="mr-2 self-center text-gray-300" size="18" />
                           )}
                           <div>{a.activityType === 'listing' && 'Listed'}</div>
                         </div>
@@ -888,7 +892,7 @@ export default function NftByAddress({
                           {multipleWallets && (
                             <img
                               src="/images/svgs/uturn.svg"
-                              className="w-4 mr-2 text-gray-300"
+                              className="mr-2 w-4 text-gray-300"
                               alt="wallets"
                             />
                           )}
