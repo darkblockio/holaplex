@@ -506,7 +506,7 @@ export default function NftByAddress({
                   <div>
                     <DarkblockAccordion
                       title={`Unlockable Content`}
-                      amount={1}
+                      amount={5}
                       action={() => setDarkblockModalVisibility(true)}
                     >
                       <SolanaDarkblockWidget
