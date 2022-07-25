@@ -42,6 +42,8 @@ import { ButtonSkeleton } from '@/components/Skeletons';
 import { DollarSign, Tag as FeatherTag, Zap } from 'react-feather';
 import dynamic from 'next/dynamic';
 import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
+import DarkblockAccordion from '@/components/DarkblockAccordion';
+import { DarkblockMint } from '@/components/DarkblockMint';
 
 const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
   ssr: false,
@@ -445,7 +447,7 @@ export default function NftByAddress({
                   </div>
                 )}
 
-                { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                {/* { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
                     <div className={`flex w-full items-center justify-between`}>
                       <div className={`flex items-center`}>
@@ -455,7 +457,20 @@ export default function NftByAddress({
                       <Button onClick={() => setDarkblockModalVisibility(true)}>Unlock</Button>
                     </div>
                   </div>
-                )}
+                )} */}
+
+                { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                  <div>
+                    <DarkblockAccordion title={`Unlockable Content`} amount={1} action={() => setDarkblockModalVisibility(true)}>
+                      <SolanaDarkblockWidget
+                        tokenId={nft?.mintAddress}
+                        walletAdapter={walletAdapter}
+                        config={config}
+                      />
+                    </DarkblockAccordion>
+                  </div>
+                  )
+                }
 
                 {hasDefaultListing && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
@@ -1004,11 +1019,7 @@ export default function NftByAddress({
               setOpen={setDarkblockModalVisibility}
               title={`Darkblock Unlockable Content`}
             >
-              <SolanaDarkblockWidget
-                tokenId={nft?.mintAddress}
-                walletAdapter={walletAdapter}
-                config={config}
-              />
+              <DarkblockMint />
             </Modal>
           </>
         )}

@@ -19,8 +19,7 @@ export const DarkblockBadge: FC = () => {
       }}
       title={text}>
       <div
-        data-tooltip-target="tooltip-default"
-        className='flex items-center justify-around h-6 px-2 text-xs font-medium bg-gray-900 bg-opacity-50 rounded-full '
+        className='flex items-center justify-around h-6 px-2 text-xs font-medium bg-gray-900 bg-opacity-50 rounded-full'
         style={{backdropFilter: 'blur(10px)'}}>
         <img
           src={imgOpt('/images/footericon-blk.svg', 600)}
