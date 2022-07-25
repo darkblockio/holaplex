@@ -40,6 +40,26 @@ import { ExplorerIcon } from '@/assets/icons/Explorer';
 import NFTFile from '@/components/NFTFile';
 import { ButtonSkeleton } from '@/components/Skeletons';
 import { DollarSign, Tag as FeatherTag, Zap } from 'react-feather';
+import dynamic from 'next/dynamic';
+import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
+import DarkblockAccordion from '@/components/DarkblockAccordion';
+import { DarkblockMint } from '@/components/DarkblockMint';
+
+// import SolanaDarkblockWidget from './sol'
+const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
+  ssr: false,
+});
+
+const config = {
+  customCssClass: 'darkblock-css', // pass here a class name you plan to use
+  debug: false, // debug flag to console.log some variables
+  imgViewer: {
+    // image viewer control parameters
+    showRotationControl: true,
+    autoHideControls: true,
+    controlsFadeDelay: true,
+  },
+};
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const nftAddress = context?.params?.address ?? '';
@@ -104,8 +124,9 @@ export default function NftByAddress({
   description?: string;
   image?: string;
 }) {
-  const { publicKey } = useWallet();
   const router = useRouter();
+  const walletAdapter = useWallet();
+  const publicKey = walletAdapter.publicKey;
 
   const [queryNft, { data, loading, called, refetch, error }] = useNftMarketplaceLazyQuery();
   const [queryNftActivity, activityContext] = useNftActivityLazyQuery();
@@ -156,9 +177,13 @@ export default function NftByAddress({
   const [sellModalVisibility, setSellModalVisibility] = useState(false);
   const [sellCancelModalVisibility, setSellCancelModalVisibility] = useState(false);
   const [sellUpdateModalVisibility, setSellUpdateModalVisibility] = useState(false);
+  const [darkblockModalVisibility, setDarkblockModalVisibility] = useState(false);
 
   const nft = data?.nft || data?.nftByMintAddress;
   const marketplace = data?.marketplace;
+
+  const owner = nft?.owner?.address;
+  const darkblock = useFetchDarkblocked(owner);
 
   // has listed via default Holaplex marketplace (disregards others)
   const defaultListing = nft?.listings.find(
@@ -268,7 +293,7 @@ export default function NftByAddress({
           <meta property="og:site_name" content="Holaplex" />
           <meta property="og:type" content="website" />
         </Head>
-        <div className=" text-white">
+        <div className="text-white ">
           <div className="mt-12 mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
             <div className="mb-4 block lg:mb-0 lg:flex lg:items-center lg:justify-center ">
               <div className="mb-6 block lg:hidden">
@@ -421,6 +446,36 @@ export default function NftByAddress({
                     )}
                   </div>
                 )}
+
+                {/* { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                  <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
+                    <div className={`flex w-full items-center justify-between`}>
+                      <div className={`flex items-center`}>
+                        <img alt={'Darkblock logo'} src={'/images/footericon-blk.svg'} className="h-6 mr-2"/>
+                        <h3 className={` text-base font-medium text-gray-300`}>Includes Unlockable Content</h3>
+                      </div>
+                      <Button onClick={() => setDarkblockModalVisibility(true)}>Unlock</Button>
+                    </div>
+                  </div>
+                )} */}
+
+                {darkblock.data?.find((item: any) => item.token === nft?.mintAddress)
+                  .is_darkblocked && (
+                  <div>
+                    <DarkblockAccordion
+                      title={`Unlockable Content`}
+                      amount={1}
+                      action={() => setDarkblockModalVisibility(true)}
+                    >
+                      <SolanaDarkblockWidget
+                        tokenId={nft?.mintAddress}
+                        walletAdapter={walletAdapter}
+                        config={config}
+                      />
+                    </DarkblockAccordion>
+                  </div>
+                )}
+
                 {hasDefaultListing && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
                     {isOwner && hasOffers && (
@@ -962,6 +1017,13 @@ export default function NftByAddress({
                 setOpen={setSellUpdateModalVisibility}
                 offer={topOffer as Offer}
               />
+            </Modal>
+            <Modal
+              open={darkblockModalVisibility}
+              setOpen={setDarkblockModalVisibility}
+              title={`Darkblock Unlockable Content`}
+            >
+              <DarkblockMint />
             </Modal>
           </>
         )}
