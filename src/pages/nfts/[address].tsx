@@ -49,6 +49,7 @@ import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
 import DarkblockAccordion from '@/components/DarkblockAccordion';
 import { DarkblockMint } from '@/components/DarkblockMint';
 
+// import SolanaDarkblockWidget from './sol'
 const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
   ssr: false,
 });
@@ -63,9 +64,6 @@ const config = {
     controlsFadeDelay: true,
   },
 };
-
->>>>>>> 69dc5095 (add darkblock sol widget +create mint modal +widget style (#3))
-
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const nftAddress = context?.params?.address ?? '';
 
@@ -503,9 +501,14 @@ export default function NftByAddress({
                   </div>
                 )} */}
 
-                { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                {darkblock.data?.find((item: any) => item.token === nft?.mintAddress)
+                  .is_darkblocked && (
                   <div>
-                    <DarkblockAccordion title={`Unlockable Content`} amount={1} action={() => setDarkblockModalVisibility(true)}>
+                    <DarkblockAccordion
+                      title={`Unlockable Content`}
+                      amount={1}
+                      action={() => setDarkblockModalVisibility(true)}
+                    >
                       <SolanaDarkblockWidget
                         tokenId={nft?.mintAddress}
                         walletAdapter={walletAdapter}
@@ -513,8 +516,7 @@ export default function NftByAddress({
                       />
                     </DarkblockAccordion>
                   </div>
-                  )
-                }
+                )}
 
 >>>>>>> 69dc5095 (add darkblock sol widget +create mint modal +widget style (#3))
                 {hasDefaultListing && (
