@@ -44,6 +44,27 @@ import NFTFile from '@/components/NFTFile';
 import { ClipboardCheckIcon, ExclamationCircleIcon } from '@heroicons/react/outline';
 import { ButtonSkeleton } from '@/components/Skeletons';
 import { DollarSign, Tag as FeatherTag, Zap } from 'react-feather';
+import dynamic from 'next/dynamic';
+import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
+import DarkblockAccordion from '@/components/DarkblockAccordion';
+import { DarkblockMint } from '@/components/DarkblockMint';
+
+const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
+  ssr: false,
+});
+
+const config = {
+  customCssClass: 'darkblock-css', // pass here a class name you plan to use
+  debug: false, // debug flag to console.log some variables
+  imgViewer: {
+    // image viewer control parameters
+    showRotationControl: true,
+    autoHideControls: true,
+    controlsFadeDelay: true,
+  },
+};
+
+>>>>>>> 69dc5095 (add darkblock sol widget +create mint modal +widget style (#3))
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const nftAddress = context?.params?.address ?? '';
@@ -470,6 +491,32 @@ export default function NftByAddress({
                     )}
                   </div>
                 )}
+                {/* { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                  <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
+                    <div className={`flex w-full items-center justify-between`}>
+                      <div className={`flex items-center`}>
+                        <img alt={'Darkblock logo'} src={'/images/footericon-blk.svg'} className="h-6 mr-2"/>
+                        <h3 className={` text-base font-medium text-gray-300`}>Includes Unlockable Content</h3>
+                      </div>
+                      <Button onClick={() => setDarkblockModalVisibility(true)}>Unlock</Button>
+                    </div>
+                  </div>
+                )} */}
+
+                { darkblock.data?.find(( item: any ) => item.token === nft?.mintAddress).is_darkblocked && (
+                  <div>
+                    <DarkblockAccordion title={`Unlockable Content`} amount={1} action={() => setDarkblockModalVisibility(true)}>
+                      <SolanaDarkblockWidget
+                        tokenId={nft?.mintAddress}
+                        walletAdapter={walletAdapter}
+                        config={config}
+                      />
+                    </DarkblockAccordion>
+                  </div>
+                  )
+                }
+
+>>>>>>> 69dc5095 (add darkblock sol widget +create mint modal +widget style (#3))
                 {hasDefaultListing && (
                   <div className={`flex flex-col rounded-md bg-gray-800 p-6`}>
                     {isOwner && hasOffers && (
@@ -1078,11 +1125,7 @@ export default function NftByAddress({
               setOpen={setDarkblockModalVisibility}
               title={`Darkblock Unlockable Content`}
             >
-              <SolanaDarkblockWidget
-                tokenId={nft?.mintAddress}
-                walletAdapter={walletAdapter}
-                config={config}
-              />
+              <DarkblockMint />
             </Modal>
           </>
         )}
