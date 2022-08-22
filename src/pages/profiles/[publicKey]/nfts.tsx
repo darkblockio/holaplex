@@ -36,11 +36,11 @@ import { TailSpin } from 'react-loader-spinner';
 import NoProfileItems, { NoProfileVariant } from '@/components/NoProfileItems';
 import ProfileLayout from '@/views/profiles/ProfileLayout';
 import GridSelector, { GridSize } from '@/components/GridSelector';
-import AhListingMultiMarketplace from '../../nfts/[address]';
 import { getAuctionHouseInfo } from '../../../modules/utils/marketplace';
 import Popover from '../../../components/Popover';
 import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
 import { DarkblockBadge } from '@/components/DarkblockBadge';
+import { AhListingMultiMarketplace } from '../../nfts/[address]';
 
 export type OwnedNFT = OwnedNfTsQuery['nfts'][0];
 

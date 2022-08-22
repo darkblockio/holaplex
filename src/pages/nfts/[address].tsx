@@ -49,6 +49,13 @@ import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
 import DarkblockAccordion from '@/components/DarkblockAccordion';
 import { DarkblockMint } from '@/components/DarkblockMint';
 import { ProfileChip } from '@/components/ProfileChip';
+import Popover from '@/components/Popover';
+import { getAuctionHouseInfo } from '../../modules/utils/marketplace';
+
+// TODO: update sdk to include marketplaceProgramAddress
+export interface AhListingMultiMarketplace extends AhListing {
+  marketplaceProgramAddress?: string;
+}
 
 // import SolanaDarkblockWidget from './sol'
 const SolanaDarkblockWidget: any = dynamic(() => import('@darkblock.io/sol-widget'), {
