@@ -36,7 +36,7 @@ import { TailSpin } from 'react-loader-spinner';
 import NoProfileItems, { NoProfileVariant } from '@/components/NoProfileItems';
 import ProfileLayout from '@/views/profiles/ProfileLayout';
 import GridSelector, { GridSize } from '@/components/GridSelector';
-import { AhListingMultiMarketplace } from '../../nfts/[address]';
+import AhListingMultiMarketplace from '../../nfts/[address]';
 import { getAuctionHouseInfo } from '../../../modules/utils/marketplace';
 import Popover from '../../../components/Popover';
 import { useFetchDarkblocked } from 'src/hooks/useFetchDarkblocked';
@@ -92,7 +92,7 @@ export const NFTCard = ({
   newTab?: boolean;
   showCollection?: boolean;
 }) => {
-  const nftx: CustomOwnedNFT|any = nft;
+  const nftx: CustomOwnedNFT | any = nft;
   const { publicKey } = useWallet();
   const [listNFTVisibility, setListNFTVisibility] = useState(false);
   const [updateListingVisibility, setUpdateListingVisibility] = useState(false);
@@ -140,11 +140,11 @@ export const NFTCard = ({
               <img
                 src={imgOpt(nft.image, 600)}
                 alt={nft.name}
-                className="object-cover w-full rounded-lg aspect-square"
+                className="aspect-square w-full rounded-lg object-cover"
               />
             </div>
 
-            <div className="flex items-center py-4 bg-gray-900">
+            <div className="flex items-center bg-gray-900 py-4">
               <p
                 className={clsx('w-max-fit m-0 mb-0 min-h-[28px] truncate text-lg font-bold', {
                   hidden: !showName,
@@ -189,9 +189,7 @@ export const NFTCard = ({
                     />
                   </a>
                 </Link>
-                { nftx.is_darkblocked && (
-                  <DarkblockBadge />
-                )}
+                {nftx.is_darkblocked && <DarkblockBadge />}
               </>
             )}
 
@@ -480,7 +478,7 @@ type DarkblockRes = {
   platform: string;
   animation_url: string;
   is_darkblocked: boolean;
-}
+};
 
 enum ListingFilters {
   ALL,
@@ -510,14 +508,18 @@ function ProfileNFTs(props: WalletDependantPageProps) {
   const loading = ownedNFTs.loading;
   const fetchMore = ownedNFTs.fetchMore;
   const actualOwnedNFTs = ownedNFTs?.data?.nfts || [];
-  const {data} = useFetchDarkblocked(pk);
-  const nfts = actualOwnedNFTs.map((item) => {
-    const res: DarkblockRes | any = data?.find( (db: DarkblockRes) => db.token === item.mintAddress);
-    if(res) {
-      return {...item, is_darkblocked: res?.is_darkblocked }
-    }
-    return {...item, is_darkblocked: false }
-  }).filter((item) => item?.owner?.address === pk);
+  const { data } = useFetchDarkblocked(pk);
+  const nfts = actualOwnedNFTs
+    .map((item) => {
+      const res: DarkblockRes | any = data?.find(
+        (db: DarkblockRes) => db.token === item.mintAddress
+      );
+      if (res) {
+        return { ...item, is_darkblocked: res?.is_darkblocked };
+      }
+      return { ...item, is_darkblocked: false };
+    })
+    .filter((item) => item?.owner?.address === pk);
 
   const marketplace = ownedNFTs?.data?.marketplace;
 
@@ -607,7 +609,7 @@ function ProfileNFTs(props: WalletDependantPageProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex flex-col items-center gap-6 py-4 bg-gray-900 bg-opacity-80 backdrop-blur-sm lg:flex-row lg:justify-between lg:gap-4">
+      <div className="sticky top-0 z-10 flex flex-col items-center gap-6 bg-gray-900 bg-opacity-80 py-4 backdrop-blur-sm lg:flex-row lg:justify-between lg:gap-4">
         <div className={`flex w-full justify-start gap-4 lg:items-center`}>
           <ListingFilter title={`All`} filterToCheck={ListingFilters.ALL} count={totalCount} />
           <ListingFilter
